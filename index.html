@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NUL Venue Finder</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #003366;
+            --secondary-gold: #FFD700;
+            --light-gray: #f8f9fa;
+            --white: #ffffff;
+            --text-primary: #2d3436;
+            --text-secondary: #636e72;
+            --success: #00b894;
+            --warning: #fdcb6e;
+            --danger: #d63031;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--light-gray);
+            color: var(--text-primary);
+        }
+
+        .navbar {
+            background-color: var(--primary-blue);
+            padding: 1rem 2rem;
+            color: var(--white);
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar h1 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5rem;
+        }
+
+        .navbar-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--white);
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: background-color 0.3s;
+        }
+
+        .theme-toggle:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .search-section {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .search-bar {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 1rem 1rem 1rem 3rem;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(0,51,102,0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        .filters {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background: var(--white);
+            border: 2px solid #eee;
+            padding: 0.7rem 1.5rem;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--primary-blue);
+            color: var(--primary-blue);
+        }
+
+        .filter-btn.active {
+            background: var(--primary-blue);
+            color: var(--white);
+            border-color: var(--primary-blue);
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 2rem;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: 10px;
+            flex: 1;
+            min-width: 200px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .stat-icon.blue {
+            background: rgba(0,51,102,0.1);
+            color: var(--primary-blue);
+        }
+
+        .stat-icon.green {
+            background: rgba(0,184,148,0.1);
+            color: var(--success);
+        }
+
+        .stat-icon.orange {
+            background: rgba(253,203,110,0.1);
+            color: var(--warning);
+        }
+
+        .stat-info h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-info p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .venues-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+
+        .venue-card {
+            background: var(--white);
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .venue-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--primary-blue);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .venue-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+
+        .venue-card:hover::before {
+            opacity: 1;
+        }
+
+        .venue-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .venue-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .status-available {
+            background: rgba(0,184,148,0.1);
+            color: var(--success);
+        }
+
+        .status-occupied {
+            background: rgba(214,48,49,0.1);
+            color: var(--danger);
+        }
+
+        .venue-name {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .venue-details {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .detail-item i {
+            width: 20px;
+            color: var(--primary-blue);
+        }
+
+        .time-slots {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #eee;
+        }
+
+        .time-slot {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 0;
+        }
+
+        .time-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+        }
+
+        .time-indicator.busy {
+            background: var(--danger);
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .loading-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .loader {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--primary-blue);
+            border-bottom-color: transparent;
+            border-radius: 50%;
+            animation: rotation 1s linear infinite;
+        }
+
+        @keyframes rotation {
+            0% { transform: rotate(0deg) }
+            100% { transform: rotate(360deg) }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: #ddd;
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+
+            .venues-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-card {
+                min-width: 100%;
+            }
+        }
+
+        /* Smooth Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay">
+        <div class="loader"></div>
+    </div>
+
+    <nav class="navbar">
+        <h1><i class="fas fa-map-marker-alt"></i> NUL Venue Finder</h1>
+        <div class="navbar-actions">
+            <button class="theme-toggle" id="theme-toggle">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="search-section">
+            <div class="search-bar">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" placeholder="Search venues, buildings, or classes..." id="search-input">
+            </div>
+
+            <div class="filters">
+                <button class="filter-btn active" data-filter="all">
+                    <i class="fas fa-th-large"></i> All Venues
+                </button>
+                <button class="filter-btn" data-filter="available">
+                    <i class="fas fa-check-circle"></i> Available Now
+                </button>
+                <button class="filter-btn" data-filter="labs">
+                    <i class="fas fa-desktop"></i> Computer Labs
+                </button>
+                <button class="filter-btn" data-filter="lectures">
+                    <i class="fas fa-chalkboard-teacher"></i> Lecture Halls
+                </button>
+                <button class="filter-btn" data-filter="capacity">
+                    <i class="fas fa-users"></i> Large Capacity
+                </button>
+            </div>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="stat-icon blue">
+                    <i class="fas fa-building"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="total-venues">0</h3>
+                    <p>Total Venues</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green">
+                    <i class="fas fa-door-open"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="available-venues">0</h3>
+                    <p>Available Now</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon orange">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="busy-hours">0</h3>
+                    <p>Peak Hours</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="venues-grid" id="venues-container">
+            <!-- Venues will be dynamically populated here -->
+        </div>
+    </div>
+
+    <script>// Sample data - replace with your actual timetable data
+      const venues = [
+          {
+              id: 1,
+              name: "CMP 105",
+              building: "Main Building",
+              capacity: 200,
+              status: "available",
+              facilities: ["Projector", "AC", "Wi-Fi"],
+              currentClass: null,
+              nextClass: "14:00 - Digital Systems",
+              schedule: [
+                  { time: "08:00", status: "free" },
+                  { time: "10:00", status: "busy", class: "Mathematics 101" },
+                  { time: "12:00", status: "free" },
+                  { time: "14:00", status: "busy", class: "Digital Systems" }
+              ]
+          },
+          {
+              id: 2,
+              name: "FTF 101",
+              building: "ICT Building",
+              capacity: 50,
+              status: "occupied",
+              facilities: ["Computers", "Projector", "AC"],
+              currentClass: "Database Systems",
+              nextAvailable: "15:30",
+              schedule: [
+                  { time: "08:00", status: "busy", class: "Programming" },
+                  { time: "10:00", status: "free" },
+                  { time: "12:00", status: "busy", class: "Database Systems" },
+                  { time: "14:00", status: "free" }
+              ]
+          },
+          
+      ];
+      
+      // Utility functions
+      function showLoading() {
+          document.querySelector('.loading-overlay').classList.add('active');
+      }
+      
+      function hideLoading() {
+          document.querySelector('.loading-overlay').classList.remove('active');
+      }
+      
+      function updateStats() {
+          const totalVenues = venues.length;
+          const availableVenues = venues.filter(v => v.status === 'available').length;
+          const busyHours = calculatePeakHours();
+      
+          document.getElementById('total-venues').textContent = totalVenues;
+          document.getElementById('available-venues').textContent = availableVenues;
+          document.getElementById('busy-hours').textContent = busyHours;
+      }
+      
+      function calculatePeakHours() {
+          const hourCounts = {};
+          venues.forEach(venue => {
+              venue.schedule.forEach(slot => {
+                  if (slot.status === 'busy') {
+                      const hour = slot.time.split(':')[0];
+                      hourCounts[hour] = (hourCounts[hour] || 0) + 1;
+                  }
+              });
+          });
+          return Object.values(hourCounts).sort((a, b) => b - a)[0] || 0;
+      }
+      
+      function createVenueCard(venue) {
+          const facilityIcons = {
+              "Projector": "fas fa-projector",
+              "AC": "fas fa-snowflake",
+              "Wi-Fi": "fas fa-wifi",
+              "Computers": "fas fa-desktop"
+          };
+      
+          const scheduleHTML = venue.schedule.map(slot => `
+              <div class="time-slot">
+                  <div class="time-indicator ${slot.status === 'busy' ? 'busy' : ''}"></div>
+                  <span>${slot.time}</span>
+                  ${slot.class ? `<span>- ${slot.class}</span>` : '<span>- Available</span>'}
+              </div>
+          `).join('');
+      
+          return `
+              <div class="venue-card" data-venue-id="${venue.id}">
+                  <div class="venue-header">
+                      <div>
+                          <h3 class="venue-name">${venue.name}</h3>
+                          <span class="venue-status ${venue.status === 'available' ? 'status-available' : 'status-occupied'}">
+                              <i class="fas fa-${venue.status === 'available' ? 'check-circle' : 'clock'}"></i>
+                              ${venue.status === 'available' ? 'Available Now' : 'Occupied'}
+                          </span>
+                      </div>
+                  </div>
+      
+                  <div class="venue-details">
+                      <div class="detail-item">
+                          <i class="fas fa-building"></i>
+                          <span>${venue.building}</span>
+                      </div>
+                      <div class="detail-item">
+                          <i class="fas fa-users"></i>
+                          <span>Capacity: ${venue.capacity} people</span>
+                      </div>
+                      <div class="detail-item">
+                          <i class="fas fa-tools"></i>
+                          <span>
+                              ${venue.facilities.map(facility => `
+                                  <i class="${facilityIcons[facility] || 'fas fa-check'}" title="${facility}"></i>
+                              `).join(' ')}
+                          </span>
+                      </div>
+                  </div>
+      
+                  <div class="time-slots">
+                      <h4>Today's Schedule</h4>
+                      ${scheduleHTML}
+                  </div>
+              </div>
+          `;
+      }
+      
+      function displayVenues(venuesList) {
+          const container = document.getElementById('venues-container');
+          
+          if (venuesList.length === 0) {
+              container.innerHTML = `
+                  <div class="empty-state">
+                      <i class="fas fa-search"></i>
+                      <h3>No venues found</h3>
+                      <p>Try adjusting your search or filters</p>
+                  </div>
+              `;
+              return;
+          }
+      
+          container.innerHTML = venuesList.map(venue => createVenueCard(venue)).join('');
+      }
+      
+      function filterVenues(searchTerm = '', activeFilter = 'all') {
+          showLoading();
+      
+          let filteredVenues = venues;
+      
+          // Apply search
+          if (searchTerm) {
+              filteredVenues = filteredVenues.filter(venue => 
+                  venue.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  venue.building.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  venue.facilities.some(f => f.toLowerCase().includes(searchTerm.toLowerCase()))
+              );
+          }
+      
+          // Apply filters
+          switch (activeFilter) {
+              case 'available':
+                  filteredVenues = filteredVenues.filter(venue => venue.status === 'available');
+                  break;
+              case 'labs':
+                  filteredVenues = filteredVenues.filter(venue => 
+                      venue.name.toLowerCase().includes('lab') ||
+                      venue.facilities.includes('Computers')
+                  );
+                  break;
+              case 'lectures':
+                  filteredVenues = filteredVenues.filter(venue => 
+                      venue.name.toLowerCase().includes('lecture') ||
+                      venue.name.toLowerCase().includes('theatre')
+                  );
+                  break;
+              case 'capacity':
+                  filteredVenues = filteredVenues.filter(venue => venue.capacity >= 100);
+                  break;
+          }
+      
+          setTimeout(() => {
+              displayVenues(filteredVenues);
+              hideLoading();
+          }, 300);
+      }
+      
+      // Theme Toggle
+      let isDarkMode = false;
+      function toggleTheme() {
+          isDarkMode = !isDarkMode;
+          const root = document.documentElement;
+          
+          if (isDarkMode) {
+              // Dark mode colors
+              root.style.setProperty('--light-gray', '#1a1a1a');
+              root.style.setProperty('--white', '#242424');
+              root.style.setProperty('--text-primary', '#ffffff');
+              root.style.setProperty('--text-secondary', '#a0a0a0');
+              document.querySelector('.theme-toggle i').classList.remove('fa-moon');
+              document.querySelector('.theme-toggle i').classList.add('fa-sun');
+          } else {
+              // Light mode colors
+              root.style.setProperty('--light-gray', '#f8f9fa');
+              root.style.setProperty('--white', '#ffffff');
+              root.style.setProperty('--text-primary', '#2d3436');
+              root.style.setProperty('--text-secondary', '#636e72');
+              document.querySelector('.theme-toggle i').classList.remove('fa-sun');
+              document.querySelector('.theme-toggle i').classList.add('fa-moon');
+          }
+      
+          // Update card shadows and borders
+          const cards = document.querySelectorAll('.venue-card, .stat-card, .search-section');
+          cards.forEach(card => {
+              if (isDarkMode) {
+                  card.style.boxShadow = '0 4px 6px rgba(0,0,0,0.3)';
+                  card.style.border = '1px solid #333';
+              } else {
+                  card.style.boxShadow = '0 4px 6px rgba(0,0,0,0.05)';
+                  card.style.border = 'none';
+              }
+          });
+      }
+      
+      // Event Listeners
+      document.addEventListener('DOMContentLoaded', () => {
+          // Initial display
+          updateStats();
+          filterVenues();
+      
+          // Search functionality
+          const searchInput = document.getElementById('search-input');
+          let searchTimeout;
+          searchInput.addEventListener('input', (e) => {
+              clearTimeout(searchTimeout);
+              searchTimeout = setTimeout(() => {
+                  const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
+                  filterVenues(e.target.value, activeFilter);
+              }, 300);
+          });
+      
+          // Filter buttons
+          document.querySelectorAll('.filter-btn').forEach(button => {
+              button.addEventListener('click', () => {
+                  document.querySelectorAll('.filter-btn').forEach(btn => 
+                      btn.classList.remove('active')
+                  );
+                  button.classList.add('active');
+                  filterVenues(searchInput.value, button.dataset.filter);
+              });
+          });
+      
+          // Theme toggle
+          document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+      });
+      
+      // Real-time updates
+      setInterval(() => {
+          venues.forEach(venue => {
+              if (Math.random() > 0.8) {
+                  venue.status = venue.status === 'available' ? 'occupied' : 'available';
+              }
+          });
+          const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
+          const searchTerm = document.getElementById('search-input').value;
+          filterVenues(searchTerm, activeFilter);
+          updateStats();
+      }, 30000);
+  </script>
+</body>
+</html>
